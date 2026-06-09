@@ -29,8 +29,7 @@ function onColorInput(e) {
     console.log('color:', e.target.value)
 }
 
-// Stop the link navigating; download is a TODO until the canvas is editable.
-function onDownloadClick(e) {
-    e.preventDefault()
-    alert('Download will be enabled once you create and render a meme on the canvas.')
-}
+// TODO : enable download
+// function onDownloadClick(e) {
+//     e.preventDefault()
+// }
