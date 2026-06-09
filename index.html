@@ -3,9 +3,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>meme-generator</title>
+    <link rel="stylesheet" href="css/main.css">
+    <title>Ultimate Meme Generator</title>
 </head>
 <body>
-    <script src="js/test.js"></script>
+    <header class="app-header">
+        <div class="container">
+            <h1>Ultimate Meme Generator</h1>
+        </div>
+    </header>
+
+    <main class="container layout">
+        <section class="panel gallery">
+            <h2>Image Gallery</h2>
+            <div class="gallery-grid">
+                <!-- images will be populated here -->
+            </div>
+        </section>
+
+        <section class="panel editor">
+            <h2>Meme Editor</h2>
+            <div class="editor-inner">
+                <canvas class="meme-canvas" width="500" height="400"></canvas>
+                <div class="controls">
+                    <input class="text-input" type="text" placeholder="Enter meme text" />
+                    <input class="color-picker" type="color" value="#ffffff" />
+                    <a href="#" class="button download-link">Download</a>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <script src="js/services/memeService.js"></script>
+    <script src="js/controllers/galleryController.js"></script>
+    <script src="js/controllers/memeController.js"></script>
+    <script src="js/main.js"></script>
 </body>
 </html>
