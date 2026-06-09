@@ -30,6 +30,3 @@ function onColorInput(e) {
 }
 
 // TODO : enable download
-// function onDownloadClick(e) {
-//     e.preventDefault()
-// }
