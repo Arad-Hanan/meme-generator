@@ -1,15 +1,21 @@
 var canvasEl
 var ctx
-var currentImg   
-var currentImgId  
-var isDrawing = false  
-var BRUSH_SIZE = 5     
+var drawLayer      // offscreen canvas holding ONLY the freehand drawing
+var drawCtx        // 2d context of the drawing layer
+var currentImg     // the loaded Image, kept so text/color edits redraw without reloading
+var currentImgId   // which image id currentImg currently holds
+var isDrawing = false   // true while the mouse is held down on the canvas
+var isErasing = false   // true when the eraser tool is active (instead of the brush)
+var lastPoint = null    // previous mouse point, so we can draw a line segment to the new one
+var BRUSH_SIZE = 5      // thickness of the freehand brush
+var ERASER_SIZE = 20    // thickness of the eraser
 
-// Grab the canvas + 2d context once, wire up freehand drawing, then draw the meme.
+// Grab the canvas + 2d context once, set up the drawing layer + mouse events, then draw.
 function initMemeController(){
 	canvasEl = document.querySelector('.meme-canvas')
 	if(!canvasEl) return
 	ctx = canvasEl.getContext('2d')
+	createDrawLayer()
 	canvasEl.addEventListener('mousedown', onCanvasMouseDown)
 	canvasEl.addEventListener('mousemove', onCanvasMouseMove)
 	canvasEl.addEventListener('mouseup', onCanvasStopDraw)
@@ -17,29 +23,68 @@ function initMemeController(){
 	renderMeme()
 }
 
-// Mouse pressed: start a new stroke (using the brush color) and mark its first point.
+// Build the hidden canvas that holds the drawing, same size as the visible one.
+function createDrawLayer(){
+	drawLayer = document.createElement('canvas')
+	drawLayer.width = canvasEl.width
+	drawLayer.height = canvasEl.height
+	drawCtx = drawLayer.getContext('2d')
+}
+
+// Turn the eraser on/off; returns the new state so the UI can show it.
+function toggleEraser(){
+	isErasing = !isErasing
+	return isErasing
+}
+
+// Wipe the drawing layer only (image + text stay), then redraw.
+function clearDrawing(){
+	if(!drawCtx) return
+	drawCtx.clearRect(0,0,drawLayer.width,drawLayer.height)
+	drawMeme()
+}
+
+// Mouse pressed: begin a stroke and paint a dot at the start point.
 function onCanvasMouseDown(ev){
 	isDrawing = true
-	memeService.addStroke(memeService.getDrawColor(), BRUSH_SIZE)
-	addPointFromEvent(ev)
+	lastPoint = getCanvasPos(ev)
+	paintSegment(lastPoint, lastPoint)
+	drawMeme()
 }
 
-// Mouse moved: only while drawing, add the new point and redraw.
+// Mouse moved: only while drawing, paint from the last point to the new one.
 function onCanvasMouseMove(ev){
 	if(!isDrawing) return
-	addPointFromEvent(ev)
+	var pos = getCanvasPos(ev)
+	paintSegment(lastPoint, pos)
+	lastPoint = pos
+	drawMeme()
 }
 
-// Mouse released or left the canvas: stop the current stroke.
+// Mouse released or left the canvas: end the stroke.
 function onCanvasStopDraw(){
 	isDrawing = false
+	lastPoint = null
 }
 
-// Convert a mouse event into a canvas point and append it to the current stroke, then redraw.
-function addPointFromEvent(ev){
-	var pos = getCanvasPos(ev)
-	memeService.addStrokePoint(pos.x, pos.y)
-	drawMeme()
+// Paint one line segment onto the drawing layer: brush paints, eraser cuts pixels away.
+function paintSegment(from, to){
+	drawCtx.lineCap = 'round'
+	drawCtx.lineJoin = 'round'
+	if(isErasing){
+		// 'destination-out' removes existing drawing pixels instead of adding color.
+		drawCtx.globalCompositeOperation = 'destination-out'
+		drawCtx.lineWidth = ERASER_SIZE
+		drawCtx.strokeStyle = 'rgba(0,0,0,1)'
+	} else {
+		drawCtx.globalCompositeOperation = 'source-over'
+		drawCtx.lineWidth = BRUSH_SIZE
+		drawCtx.strokeStyle = memeService.getDrawColor()
+	}
+	drawCtx.beginPath()
+	drawCtx.moveTo(from.x, from.y)
+	drawCtx.lineTo(to.x, to.y)
+	drawCtx.stroke()
 }
 
 // Translate page mouse coordinates into canvas coordinates (handles CSS scaling).
@@ -53,7 +98,7 @@ function getCanvasPos(ev){
 	}
 }
 
-// Wipe the whole canvas before each redraw.
+// Wipe the whole visible canvas before each redraw.
 function clearCanvas(){
 	if(!ctx) return
 	ctx.clearRect(0,0,canvasEl.width,canvasEl.height)
@@ -70,7 +115,7 @@ function findSelectedImg(){
 }
 
 // Draw the current meme. If the selected image is already loaded, redraw right
-// away (instant on text/color edits); otherwise load it first, then draw.
+// away (instant on text/color/draw edits); otherwise load it first, then draw.
 function renderMeme(){
 	var imgObj = findSelectedImg()
 	if(!imgObj) return
@@ -85,7 +130,7 @@ function renderMeme(){
 	currentImg.src = imgObj.src
 }
 
-// Fit the loaded image to the canvas, then draw the text lines on top.
+// Compose the visible canvas: image at the back, the drawing layer, then text on top.
 function drawMeme(){
 	if(!currentImg) return
 	var cw = canvasEl.width
@@ -97,8 +142,8 @@ function drawMeme(){
 	var iy = (ch - ih) / 2
 	clearCanvas()
 	ctx.drawImage(currentImg, ix, iy, iw, ih)
+	ctx.drawImage(drawLayer, 0, 0)
 	drawLines()
-	drawStrokes()
 }
 
 // Loop over every text line in the meme and draw each one.
@@ -123,40 +168,9 @@ function drawLine(line, idx){
 	ctx.strokeText(line.txt, x, y)
 }
 
-// Paint every saved freehand stroke on top of the image.
-function drawStrokes(){
-	var meme = memeService.getMeme()
-	for(var i=0;i<meme.strokes.length;i++){
-		drawStroke(meme.strokes[i])
-	}
-}
-
-// Draw a single stroke: a dot for one point, otherwise a connected line.
-function drawStroke(stroke){
-	if(stroke.points.length === 0) return
-	ctx.strokeStyle = stroke.color
-	ctx.fillStyle = stroke.color
-	ctx.lineWidth = stroke.size
-	ctx.lineCap = 'round'
-	ctx.lineJoin = 'round'
-
-	if(stroke.points.length === 1){
-		var p = stroke.points[0]
-		ctx.beginPath()
-		ctx.arc(p.x, p.y, stroke.size/2, 0, Math.PI*2)
-		ctx.fill()
-		return
-	}
-
-	ctx.beginPath()
-	ctx.moveTo(stroke.points[0].x, stroke.points[0].y)
-	for(var i=1;i<stroke.points.length;i++){
-		ctx.lineTo(stroke.points[i].x, stroke.points[i].y)
-	}
-	ctx.stroke()
-}
-
 var memeController = {
 	init: initMemeController,
-	renderMeme: renderMeme
+	renderMeme: renderMeme,
+	toggleEraser: toggleEraser,
+	clearDrawing: clearDrawing
 }

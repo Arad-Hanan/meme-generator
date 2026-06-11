@@ -12,10 +12,14 @@ function bindControls() {
     var textInput = document.querySelector('.text-input')
     var textColorPicker = document.querySelector('.text-color-picker')
     var drawColorPicker = document.querySelector('.draw-color-picker')
+    var eraserBtn = document.querySelector('.eraser-btn')
+    var clearBtn = document.querySelector('.clear-btn')
 
     if (textInput) textInput.addEventListener('input', onTextInput)
     if (textColorPicker) textColorPicker.addEventListener('input', onTextColorInput)
     if (drawColorPicker) drawColorPicker.addEventListener('input', onDrawColorInput)
+    if (eraserBtn) eraserBtn.addEventListener('click', onEraserClick)
+    if (clearBtn) clearBtn.addEventListener('click', onClearClick)
 }
 
 // As the user types: update the selected line's text, then redraw the canvas.
@@ -33,6 +37,17 @@ function onTextColorInput(e) {
 // Drawing color picker: set the brush color for future strokes (existing ones keep their color).
 function onDrawColorInput(e) {
     memeService.setDrawColor(e.target.value)
+}
+
+// Eraser button: toggle erase mode and reflect the on/off state on the button.
+function onEraserClick(e) {
+    var isOn = memeController.toggleEraser()
+    e.currentTarget.classList.toggle('is-active', isOn)
+}
+
+// Clear button: remove all freehand drawing (image and text are untouched).
+function onClearClick() {
+    memeController.clearDrawing()
 }
 
 // TODO : enable download
