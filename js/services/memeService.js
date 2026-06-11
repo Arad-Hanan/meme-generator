@@ -36,6 +36,9 @@ var gMeme = {
     strokes: []
 }
 
+// Current brush color for freehand drawing (separate from the text color).
+var gDrawColor = '#000000'
+
 function getImgs(){
     return imgs
 }
@@ -61,6 +64,16 @@ function setLineColor(color){
     gMeme.lines[gMeme.selectedLineIdx].color = color
 }
 
+// Read the current freehand brush color.
+function getDrawColor(){
+    return gDrawColor
+}
+
+// Change the freehand brush color (affects strokes drawn from now on).
+function setDrawColor(color){
+    gDrawColor = color
+}
+
 // Begin a new freehand stroke (called once when the mouse goes down).
 function addStroke(color, size){
     gMeme.strokes.push({ color: color, size: size, points: [] })
@@ -84,6 +97,8 @@ var memeService = {
     setImgById: setImgById,
     setLineTxt: setLineTxt,
     setLineColor: setLineColor,
+    getDrawColor: getDrawColor,
+    setDrawColor: setDrawColor,
     addStroke: addStroke,
     addStrokePoint: addStrokePoint,
     clearStrokes: clearStrokes

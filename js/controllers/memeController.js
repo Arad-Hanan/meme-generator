@@ -1,9 +1,9 @@
 var canvasEl
 var ctx
-var currentImg     // the loaded Image, kept so text/color edits redraw without reloading
-var currentImgId   // which image id currentImg currently holds
-var isDrawing = false   // true while the mouse is held down for freehand drawing
-var BRUSH_SIZE = 5      // thickness of the freehand brush
+var currentImg   
+var currentImgId  
+var isDrawing = false  
+var BRUSH_SIZE = 5     
 
 // Grab the canvas + 2d context once, wire up freehand drawing, then draw the meme.
 function initMemeController(){
@@ -17,12 +17,10 @@ function initMemeController(){
 	renderMeme()
 }
 
-// Mouse pressed: start a new stroke (using the selected line's color) and mark its first point.
+// Mouse pressed: start a new stroke (using the brush color) and mark its first point.
 function onCanvasMouseDown(ev){
 	isDrawing = true
-	var meme = memeService.getMeme()
-	var color = meme.lines[meme.selectedLineIdx].color || '#ffffff'
-	memeService.addStroke(color, BRUSH_SIZE)
+	memeService.addStroke(memeService.getDrawColor(), BRUSH_SIZE)
 	addPointFromEvent(ev)
 }
 
