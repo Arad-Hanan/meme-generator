@@ -31,7 +31,9 @@ var gMeme = {
             x: null,
             y: null
         }
-    ]
+    ],
+    // Freehand drawings. Each stroke is one mouse-drag: { color, size, points:[{x,y}] }
+    strokes: []
 }
 
 function getImgs(){
@@ -59,11 +61,31 @@ function setLineColor(color){
     gMeme.lines[gMeme.selectedLineIdx].color = color
 }
 
+// Begin a new freehand stroke (called once when the mouse goes down).
+function addStroke(color, size){
+    gMeme.strokes.push({ color: color, size: size, points: [] })
+}
+
+// Add one point to the stroke currently being drawn (called as the mouse moves).
+function addStrokePoint(x, y){
+    if(gMeme.strokes.length === 0) return
+    var lastStroke = gMeme.strokes[gMeme.strokes.length - 1]
+    lastStroke.points.push({ x: x, y: y })
+}
+
+// Remove all freehand strokes.
+function clearStrokes(){
+    gMeme.strokes = []
+}
+
 var memeService = {
     getImgs: getImgs,
     getMeme: getMeme,
     setImgById: setImgById,
     setLineTxt: setLineTxt,
-    setLineColor: setLineColor
+    setLineColor: setLineColor,
+    addStroke: addStroke,
+    addStrokePoint: addStrokePoint,
+    clearStrokes: clearStrokes
 }
 

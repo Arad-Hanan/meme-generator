@@ -2,13 +2,57 @@ var canvasEl
 var ctx
 var currentImg     // the loaded Image, kept so text/color edits redraw without reloading
 var currentImgId   // which image id currentImg currently holds
+var isDrawing = false   // true while the mouse is held down for freehand drawing
+var BRUSH_SIZE = 5      // thickness of the freehand brush
 
-// Grab the canvas + 2d context once, then draw the current meme.
+// Grab the canvas + 2d context once, wire up freehand drawing, then draw the meme.
 function initMemeController(){
 	canvasEl = document.querySelector('.meme-canvas')
 	if(!canvasEl) return
 	ctx = canvasEl.getContext('2d')
+	canvasEl.addEventListener('mousedown', onCanvasMouseDown)
+	canvasEl.addEventListener('mousemove', onCanvasMouseMove)
+	canvasEl.addEventListener('mouseup', onCanvasStopDraw)
+	canvasEl.addEventListener('mouseleave', onCanvasStopDraw)
 	renderMeme()
+}
+
+// Mouse pressed: start a new stroke (using the selected line's color) and mark its first point.
+function onCanvasMouseDown(ev){
+	isDrawing = true
+	var meme = memeService.getMeme()
+	var color = meme.lines[meme.selectedLineIdx].color || '#ffffff'
+	memeService.addStroke(color, BRUSH_SIZE)
+	addPointFromEvent(ev)
+}
+
+// Mouse moved: only while drawing, add the new point and redraw.
+function onCanvasMouseMove(ev){
+	if(!isDrawing) return
+	addPointFromEvent(ev)
+}
+
+// Mouse released or left the canvas: stop the current stroke.
+function onCanvasStopDraw(){
+	isDrawing = false
+}
+
+// Convert a mouse event into a canvas point and append it to the current stroke, then redraw.
+function addPointFromEvent(ev){
+	var pos = getCanvasPos(ev)
+	memeService.addStrokePoint(pos.x, pos.y)
+	drawMeme()
+}
+
+// Translate page mouse coordinates into canvas coordinates (handles CSS scaling).
+function getCanvasPos(ev){
+	var rect = canvasEl.getBoundingClientRect()
+	var scaleX = canvasEl.width / rect.width
+	var scaleY = canvasEl.height / rect.height
+	return {
+		x: (ev.clientX - rect.left) * scaleX,
+		y: (ev.clientY - rect.top) * scaleY
+	}
 }
 
 // Wipe the whole canvas before each redraw.
@@ -56,6 +100,7 @@ function drawMeme(){
 	clearCanvas()
 	ctx.drawImage(currentImg, ix, iy, iw, ih)
 	drawLines()
+	drawStrokes()
 }
 
 // Loop over every text line in the meme and draw each one.
@@ -78,6 +123,39 @@ function drawLine(line, idx){
 	var y = 60 + idx * (line.size + 10)
 	ctx.fillText(line.txt, x, y)
 	ctx.strokeText(line.txt, x, y)
+}
+
+// Paint every saved freehand stroke on top of the image.
+function drawStrokes(){
+	var meme = memeService.getMeme()
+	for(var i=0;i<meme.strokes.length;i++){
+		drawStroke(meme.strokes[i])
+	}
+}
+
+// Draw a single stroke: a dot for one point, otherwise a connected line.
+function drawStroke(stroke){
+	if(stroke.points.length === 0) return
+	ctx.strokeStyle = stroke.color
+	ctx.fillStyle = stroke.color
+	ctx.lineWidth = stroke.size
+	ctx.lineCap = 'round'
+	ctx.lineJoin = 'round'
+
+	if(stroke.points.length === 1){
+		var p = stroke.points[0]
+		ctx.beginPath()
+		ctx.arc(p.x, p.y, stroke.size/2, 0, Math.PI*2)
+		ctx.fill()
+		return
+	}
+
+	ctx.beginPath()
+	ctx.moveTo(stroke.points[0].x, stroke.points[0].y)
+	for(var i=1;i<stroke.points.length;i++){
+		ctx.lineTo(stroke.points[i].x, stroke.points[i].y)
+	}
+	ctx.stroke()
 }
 
 var memeController = {
