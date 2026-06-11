@@ -11,22 +11,21 @@ function onPageLoad() {
 function bindControls() {
     var textInput = document.querySelector('.text-input')
     var colorPicker = document.querySelector('.color-picker')
-    var downloadLink = document.querySelector('.download-link')
 
     if (textInput) textInput.addEventListener('input', onTextInput)
     if (colorPicker) colorPicker.addEventListener('input', onColorInput)
-    if (downloadLink) downloadLink.addEventListener('click', onDownloadClick)
 }
 
-// Fires as the user types meme text (rendering hookup comes later).
+// As the user types: update the selected line's text, then redraw the canvas.
 function onTextInput(e) {
-    // will bind to meme rendering later
-    console.log('text:', e.target.value)
+    memeService.setLineTxt(e.target.value)
+    memeController.renderMeme()
 }
 
-// Fires when the user picks a text color.
+// When the user picks a color: update the selected line's color, then redraw.
 function onColorInput(e) {
-    console.log('color:', e.target.value)
+    memeService.setLineColor(e.target.value)
+    memeController.renderMeme()
 }
 
 // TODO : enable download

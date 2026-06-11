@@ -1,5 +1,7 @@
 var canvasEl
 var ctx
+var currentImg     // the loaded Image, kept so text/color edits redraw without reloading
+var currentImgId   // which image id currentImg currently holds
 
 // Grab the canvas + 2d context once, then draw the current meme.
 function initMemeController(){
@@ -25,30 +27,34 @@ function findSelectedImg(){
 	return null
 }
 
-// Start loading the selected image, drawing happens in onImageLoad once it's ready.
+// Draw the current meme. If the selected image is already loaded, redraw right
+// away (instant on text/color edits); otherwise load it first, then draw.
 function renderMeme(){
 	var imgObj = findSelectedImg()
 	if(!imgObj) return
 
-	var img = new Image()
-	img.crossOrigin = 'anonymous'
-	img.src = imgObj.src
-	img.onload = onImageLoad
+	if(currentImg && currentImgId === imgObj.id){
+		drawMeme()
+		return
+	}
+	currentImgId = imgObj.id
+	currentImg = new Image()
+	currentImg.onload = drawMeme
+	currentImg.src = imgObj.src
 }
 
-// Runs when the image finishes loading: fit it to the canvas, then draw the text.
-function onImageLoad(){
-	// `this` is the loaded Image element
-	var img = this
+// Fit the loaded image to the canvas, then draw the text lines on top.
+function drawMeme(){
+	if(!currentImg) return
 	var cw = canvasEl.width
 	var ch = canvasEl.height
-	var ratio = Math.min(cw / img.width, ch / img.height)
-	var iw = img.width * ratio
-	var ih = img.height * ratio
+	var ratio = Math.min(cw / currentImg.width, ch / currentImg.height)
+	var iw = currentImg.width * ratio
+	var ih = currentImg.height * ratio
 	var ix = (cw - iw) / 2
 	var iy = (ch - ih) / 2
 	clearCanvas()
-	ctx.drawImage(img, ix, iy, iw, ih)
+	ctx.drawImage(currentImg, ix, iy, iw, ih)
 	drawLines()
 }
 
