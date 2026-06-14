@@ -168,9 +168,16 @@ function drawLine(line, idx){
 	ctx.strokeText(line.txt, x, y)
 }
 
+// Export the current canvas (image + drawing + text) as a PNG data URL.
+function getDataUrl(){
+	if(!canvasEl) return ''
+	return canvasEl.toDataURL('image/png')
+}
+
 var memeController = {
 	init: initMemeController,
 	renderMeme: renderMeme,
 	toggleEraser: toggleEraser,
-	clearDrawing: clearDrawing
+	clearDrawing: clearDrawing,
+	getDataUrl: getDataUrl
 }

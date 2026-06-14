@@ -14,12 +14,14 @@ function bindControls() {
     var drawColorPicker = document.querySelector('.draw-color-picker')
     var eraserBtn = document.querySelector('.eraser-btn')
     var clearBtn = document.querySelector('.clear-btn')
+    var downloadLink = document.querySelector('.download-link')
 
     if (textInput) textInput.addEventListener('input', onTextInput)
     if (textColorPicker) textColorPicker.addEventListener('input', onTextColorInput)
     if (drawColorPicker) drawColorPicker.addEventListener('input', onDrawColorInput)
     if (eraserBtn) eraserBtn.addEventListener('click', onEraserClick)
     if (clearBtn) clearBtn.addEventListener('click', onClearClick)
+    if (downloadLink) downloadLink.addEventListener('click', onDownloadClick)
 }
 
 // As the user types: update the selected line's text, then redraw the canvas.
@@ -50,4 +52,9 @@ function onClearClick() {
     memeController.clearDrawing()
 }
 
-// TODO : enable download
+// Download link: point it at a PNG snapshot of the canvas so the browser saves the file.
+function onDownloadClick(e) {
+    var link = e.currentTarget
+    link.href = memeController.getDataUrl()
+    link.download = 'my-meme.png'
+}
