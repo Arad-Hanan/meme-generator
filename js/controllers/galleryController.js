@@ -1,11 +1,28 @@
-// Clear the grid and rebuild a thumbnail for every image in the service.
+var gFilter = ''   // current search term used to filter the gallery
+
+// Set the search term and re-render the gallery to show only matching images.
+function setFilter(term){
+	gFilter = (term || '').trim().toLowerCase()
+	renderGallery()
+}
+
+// True when an image matches the current search term (empty term matches all).
+function matchesFilter(img){
+	if(gFilter === '') return true
+	for(var i=0;i<img.keywords.length;i++){
+		if(img.keywords[i].toLowerCase().indexOf(gFilter) !== -1) return true
+	}
+	return false
+}
+
+// Clear the grid and rebuild a thumbnail for every image that matches the filter.
 function renderGallery(){
 	var elGrid = document.querySelector('.gallery-grid')
 	if(!elGrid) return
 	var imgs = memeService.getImgs()
 	elGrid.innerHTML = ''
 	for(var i=0;i<imgs.length;i++){
-		addGalleryImg(elGrid, imgs[i])
+		if(matchesFilter(imgs[i])) addGalleryImg(elGrid, imgs[i])
 	}
 }
 
@@ -49,5 +66,6 @@ function scrollToEditor(){
 }
 
 var galleryController = {
-	renderGallery: renderGallery
+	renderGallery: renderGallery,
+	setFilter: setFilter
 }

@@ -15,6 +15,7 @@ function bindControls() {
     var eraserBtn = document.querySelector('.eraser-btn')
     var clearBtn = document.querySelector('.clear-btn')
     var downloadLink = document.querySelector('.download-link')
+    var searchInput = document.querySelector('.search-input')
 
     if (textInput) textInput.addEventListener('input', onTextInput)
     if (textColorPicker) textColorPicker.addEventListener('input', onTextColorInput)
@@ -22,6 +23,7 @@ function bindControls() {
     if (eraserBtn) eraserBtn.addEventListener('click', onEraserClick)
     if (clearBtn) clearBtn.addEventListener('click', onClearClick)
     if (downloadLink) downloadLink.addEventListener('click', onDownloadClick)
+    if (searchInput) searchInput.addEventListener('input', onSearchInput)
 }
 
 // As the user types: update the selected line's text, then redraw the canvas.
@@ -57,4 +59,9 @@ function onDownloadClick(e) {
     var link = e.currentTarget
     link.href = memeController.getDataUrl()
     link.download = 'my-meme.png'
+}
+
+// Search box: filter the gallery by keyword as the user types.
+function onSearchInput(e) {
+    galleryController.setFilter(e.target.value)
 }

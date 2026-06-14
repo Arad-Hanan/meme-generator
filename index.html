@@ -3,42 +3,56 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Luckiest+Guy&family=Roboto:wght@400;500;700&display=swap">
     <link rel="stylesheet" href="css/main.css">
-    <title>Ultimate Meme Generator</title>
+    <title>MemeGen</title>
 </head>
 <body>
     <header class="app-header">
-        <div class="container">
-            <h1>Ultimate Meme Generator</h1>
+        <div class="header-inner">
+            <span class="logo">MemeGen</span>
         </div>
     </header>
 
-    <main class="container layout">
-        <section class="panel gallery">
-            <h2>Image Gallery</h2>
-            <div class="gallery-grid">
-                <!-- images will be populated here -->
+    <main class="container">
+        <section class="panel editor">
+            <div class="editor-layout">
+                <div class="canvas-wrap">
+                    <canvas class="meme-canvas" width="500" height="400"></canvas>
+                </div>
+
+                <div class="controls-panel">
+                    <h2 class="controls-title">Edit Text Lines</h2>
+
+                    <input class="text-input" type="text" placeholder="Enter meme text" />
+
+                    <div class="control-row">
+                        <label class="control-label">
+                            Text color
+                            <input class="text-color-picker" type="color" value="#ffffff" />
+                        </label>
+                        <label class="control-label">
+                            Drawing color
+                            <input class="draw-color-picker" type="color" value="#000000" />
+                        </label>
+                    </div>
+
+                    <div class="control-row">
+                        <button type="button" class="btn btn-ghost eraser-btn">Eraser</button>
+                        <button type="button" class="btn btn-ghost clear-btn">Clear drawing</button>
+                    </div>
+
+                    <a href="#" class="btn btn-primary download-link">Download</a>
+                </div>
             </div>
         </section>
 
-        <section class="panel editor">
-            <h2>Meme Editor</h2>
-            <div class="editor-inner">
-                <canvas class="meme-canvas" width="500" height="400"></canvas>
-                <div class="controls">
-                    <input class="text-input" type="text" placeholder="Enter meme text" />
-                    <label class="control-label">
-                        Text color
-                        <input class="text-color-picker" type="color" value="#ffffff" />
-                    </label>
-                    <label class="control-label">
-                        Drawing color
-                        <input class="draw-color-picker" type="color" value="#000000" />
-                    </label>
-                    <button type="button" class="button eraser-btn">Eraser</button>
-                    <button type="button" class="button clear-btn">Clear drawing</button>
-                    <a href="#" class="button download-link">Download</a>
-                </div>
+        <section class="panel gallery">
+            <input class="search-input" type="text" placeholder="Search" />
+            <div class="gallery-grid">
+                <!-- images are populated here -->
             </div>
         </section>
     </main>
