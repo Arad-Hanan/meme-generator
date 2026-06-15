@@ -54,12 +54,44 @@ function setImgById(id){
     }
 }
 
+// The text line the user is currently editing (or null if there are none).
+function getSelectedLine(){
+    return gMeme.lines[gMeme.selectedLineIdx] || null
+}
+
+// Switch which line is being edited.
+function setSelectedLine(idx){
+    if(idx >= 0 && idx < gMeme.lines.length){
+        gMeme.selectedLineIdx = idx
+    }
+}
+
+// Add a fresh empty line and make it the selected one.
+function addLine(){
+    gMeme.lines.push({ txt: '', size: 40, color: '#ffffff', x: null, y: null })
+    gMeme.selectedLineIdx = gMeme.lines.length - 1
+}
+
+// Remove the selected line and keep the selection on a valid line.
+function deleteLine(){
+    if(gMeme.lines.length === 0) return
+    gMeme.lines.splice(gMeme.selectedLineIdx, 1)
+    if(gMeme.selectedLineIdx >= gMeme.lines.length){
+        gMeme.selectedLineIdx = gMeme.lines.length - 1
+    }
+    if(gMeme.selectedLineIdx < 0){
+        gMeme.selectedLineIdx = 0
+    }
+}
+
 function setLineTxt(txt){
-    gMeme.lines[gMeme.selectedLineIdx].txt = txt
+    var line = getSelectedLine()
+    if(line) line.txt = txt
 }
 
 function setLineColor(color){
-    gMeme.lines[gMeme.selectedLineIdx].color = color
+    var line = getSelectedLine()
+    if(line) line.color = color
 }
 
 // Read the current freehand brush color.
@@ -78,6 +110,10 @@ var memeService = {
     setImgById: setImgById,
     setLineTxt: setLineTxt,
     setLineColor: setLineColor,
+    getSelectedLine: getSelectedLine,
+    setSelectedLine: setSelectedLine,
+    addLine: addLine,
+    deleteLine: deleteLine,
     getDrawColor: getDrawColor,
     setDrawColor: setDrawColor
 }

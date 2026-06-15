@@ -44,10 +44,17 @@ function clearDrawing(){
 	drawMeme()
 }
 
-// Mouse pressed: begin a stroke and paint a dot at the start point.
+// Mouse pressed: if it landed on a text line, select that line; otherwise start drawing.
 function onCanvasMouseDown(ev){
+	var pos = getCanvasPos(ev)
+	var hitIdx = getLineIdxAtPos(pos)
+	if(hitIdx !== -1){
+		memeService.setSelectedLine(hitIdx)
+		refreshSelectedLine()
+		return
+	}
 	isDrawing = true
-	lastPoint = getCanvasPos(ev)
+	lastPoint = pos
 	paintSegment(lastPoint, lastPoint)
 	drawMeme()
 }
@@ -132,7 +139,7 @@ function renderMeme(){
 
 // Compose the visible canvas: image at the back, the drawing layer, then text on top.
 function drawMeme(){
-	if(!currentImg) return
+	if(!currentImg || !currentImg.naturalWidth) return
 	var cw = canvasEl.width
 	var ch = canvasEl.height
 	var ratio = Math.min(cw / currentImg.width, ch / currentImg.height)
@@ -146,11 +153,12 @@ function drawMeme(){
 	drawLines()
 }
 
-// Loop over every text line in the meme and draw each one.
+// Loop over every text line, drawing each one and a highlight box around the selected one.
 function drawLines(){
 	var meme = memeService.getMeme()
 	for(var j=0;j<meme.lines.length;j++){
 		drawLine(meme.lines[j], j)
+		if(j === meme.selectedLineIdx) drawLineHighlight(meme.lines[j], j)
 	}
 }
 
@@ -166,6 +174,42 @@ function drawLine(line, idx){
 	var y = 60 + idx * (line.size + 10)
 	ctx.fillText(line.txt, x, y)
 	ctx.strokeText(line.txt, x, y)
+}
+
+// Draw a dashed orange box around a line to show it is the selected one.
+function drawLineHighlight(line, idx){
+	var box = getLineBox(line, idx)
+	ctx.save()
+	ctx.strokeStyle = '#f7941d'
+	ctx.lineWidth = 2
+	ctx.setLineDash([6,4])
+	ctx.strokeRect(box.x, box.y, box.w, box.h)
+	ctx.restore()
+}
+
+// Compute the rectangle that surrounds a line's text (used for the box and hit-testing).
+function getLineBox(line, idx){
+	ctx.font = line.size + 'px Impact, Arial'
+	ctx.textAlign = 'center'
+	var textW = ctx.measureText(line.txt || '').width
+	var pad = 8
+	var boxW = Math.max(textW, 30) + pad * 2
+	var boxH = line.size + pad * 2
+	var boxX = canvasEl.width / 2 - boxW / 2
+	var boxY = (60 + idx * (line.size + 10)) - line.size + pad / 2
+	return { x: boxX, y: boxY, w: boxW, h: boxH }
+}
+
+// Return the index of the topmost line whose box contains pos, or -1 if none.
+function getLineIdxAtPos(pos){
+	var meme = memeService.getMeme()
+	for(var i=meme.lines.length-1;i>=0;i--){
+		var box = getLineBox(meme.lines[i], i)
+		if(pos.x >= box.x && pos.x <= box.x + box.w && pos.y >= box.y && pos.y <= box.y + box.h){
+			return i
+		}
+	}
+	return -1
 }
 
 // Export the current canvas (image + drawing + text) as a PNG data URL.

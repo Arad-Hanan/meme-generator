@@ -135,6 +135,46 @@ html, body {
 	background: none;
 }
 
+/* ---------- Text lines list ---------- */
+.lines-section {
+	display: flex;
+	flex-direction: column;
+	gap: 10px;
+}
+
+.lines-list {
+	display: flex;
+	flex-direction: column;
+	gap: 6px;
+	max-height: 170px;
+	overflow-y: auto;
+}
+
+.line-item {
+	text-align: left;
+	padding: 8px 10px;
+	border: 1px solid var(--border);
+	border-radius: 6px;
+	background: #fafafa;
+	font: inherit;
+	color: var(--text);
+	cursor: pointer;
+	white-space: nowrap;
+	overflow: hidden;
+	text-overflow: ellipsis;
+}
+
+.line-item:hover {
+	background: #f0f0f0;
+}
+
+.line-item.is-active {
+	border-color: var(--accent);
+	background: #fff3e3;
+	color: var(--accent-dark);
+	font-weight: 700;
+}
+
 /* ---------- Buttons ---------- */
 .btn {
 	display: inline-block;

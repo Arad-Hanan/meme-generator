@@ -1,10 +1,11 @@
 onPageLoad()
 
-// Entry point: build the gallery, init the canvas, hook up the controls.
+// Entry point: build the gallery, init the canvas, hook up the controls, sync the editor.
 function onPageLoad() {
     galleryController.renderGallery()
     memeController.init()
     bindControls()
+    refreshSelectedLine()
 }
 
 // Find the control elements by class and attach their event handlers.
@@ -16,6 +17,8 @@ function bindControls() {
     var clearBtn = document.querySelector('.clear-btn')
     var downloadLink = document.querySelector('.download-link')
     var searchInput = document.querySelector('.search-input')
+    var addLineBtn = document.querySelector('.add-line-btn')
+    var deleteLineBtn = document.querySelector('.delete-line-btn')
 
     if (textInput) textInput.addEventListener('input', onTextInput)
     if (textColorPicker) textColorPicker.addEventListener('input', onTextColorInput)
@@ -24,12 +27,15 @@ function bindControls() {
     if (clearBtn) clearBtn.addEventListener('click', onClearClick)
     if (downloadLink) downloadLink.addEventListener('click', onDownloadClick)
     if (searchInput) searchInput.addEventListener('input', onSearchInput)
+    if (addLineBtn) addLineBtn.addEventListener('click', onAddLineClick)
+    if (deleteLineBtn) deleteLineBtn.addEventListener('click', onDeleteLineClick)
 }
 
-// As the user types: update the selected line's text, then redraw the canvas.
+// As the user types: update the selected line's text, redraw, and refresh its list label.
 function onTextInput(e) {
     memeService.setLineTxt(e.target.value)
     memeController.renderMeme()
+    linesController.renderLines()
 }
 
 // Text color picker: recolor the selected text line, then redraw.
@@ -64,4 +70,36 @@ function onDownloadClick(e) {
 // Search box: filter the gallery by keyword as the user types.
 function onSearchInput(e) {
     galleryController.setFilter(e.target.value)
+}
+
+// Add line button: create a new empty line, select it, and refresh the editor.
+function onAddLineClick() {
+    memeService.addLine()
+    refreshSelectedLine()
+    focusTextInput()
+}
+
+// Delete line button: remove the selected line and refresh the editor.
+function onDeleteLineClick() {
+    memeService.deleteLine()
+    refreshSelectedLine()
+}
+
+// Move keyboard focus to the text box (after adding a line, so the user can type right away).
+function focusTextInput() {
+    var textInput = document.querySelector('.text-input')
+    if (textInput) textInput.focus()
+}
+
+// Sync everything to the currently selected line: text box, text color, the side list, the canvas.
+function refreshSelectedLine() {
+    var line = memeService.getSelectedLine()
+    var textInput = document.querySelector('.text-input')
+    var textColorPicker = document.querySelector('.text-color-picker')
+
+    if (textInput) textInput.value = line ? line.txt : ''
+    if (textColorPicker && line) textColorPicker.value = line.color
+
+    linesController.renderLines()
+    memeController.renderMeme()
 }

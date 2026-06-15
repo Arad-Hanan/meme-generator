@@ -28,6 +28,16 @@
 
                     <input class="text-input" type="text" placeholder="Enter meme text" />
 
+                    <div class="lines-section">
+                        <div class="lines-list">
+                            <!-- one button per text line, populated here -->
+                        </div>
+                        <div class="control-row">
+                            <button type="button" class="btn btn-ghost add-line-btn">+ Add line</button>
+                            <button type="button" class="btn btn-ghost delete-line-btn">Delete line</button>
+                        </div>
+                    </div>
+
                     <div class="control-row">
                         <label class="control-label">
                             Text color
@@ -60,6 +70,7 @@
     <script src="js/services/memeService.js"></script>
     <script src="js/controllers/galleryController.js"></script>
     <script src="js/controllers/memeController.js"></script>
+    <script src="js/controllers/linesController.js"></script>
     <script src="js/main.js"></script>
 </body>
 </html>
