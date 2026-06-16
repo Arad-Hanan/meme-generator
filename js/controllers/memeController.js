@@ -7,6 +7,9 @@ var currentImgId   // which image id currentImg currently holds
 var isDrawing = false   // true while the mouse is held down on the canvas
 var isErasing = false   // true when the eraser tool is active (instead of the brush)
 var lastPoint = null    // previous mouse point, so we can draw a line segment to the new one
+var isDraggingLine = false   // true while a text line is being dragged
+var dragOffsetX = 0     // gap between the cursor and the line anchor, so it doesn't jump
+var dragOffsetY = 0
 var BRUSH_SIZE = 5      // thickness of the freehand brush
 var ERASER_SIZE = 20    // thickness of the eraser
 
@@ -44,12 +47,13 @@ function clearDrawing(){
 	drawMeme()
 }
 
-// Mouse pressed: if it landed on a text line, select that line; otherwise start drawing.
+// Mouse pressed: if it landed on a text line, select and start dragging it; otherwise draw.
 function onCanvasMouseDown(ev){
 	var pos = getCanvasPos(ev)
 	var hitIdx = getLineIdxAtPos(pos)
 	if(hitIdx !== -1){
 		memeService.setSelectedLine(hitIdx)
+		startLineDrag(hitIdx, pos)
 		refreshSelectedLine()
 		return
 	}
@@ -59,18 +63,41 @@ function onCanvasMouseDown(ev){
 	drawMeme()
 }
 
-// Mouse moved: only while drawing, paint from the last point to the new one.
-function onCanvasMouseMove(ev){
-	if(!isDrawing) return
-	var pos = getCanvasPos(ev)
-	paintSegment(lastPoint, pos)
-	lastPoint = pos
-	drawMeme()
+// Remember which line we grabbed and the offset from the cursor to its anchor.
+function startLineDrag(idx, pos){
+	var meme = memeService.getMeme()
+	var anchor = getLinePos(meme.lines[idx], idx)
+	isDraggingLine = true
+	dragOffsetX = pos.x - anchor.x
+	dragOffsetY = pos.y - anchor.y
 }
 
-// Mouse released or left the canvas: end the stroke.
+// Mouse moved: drag a line, keep drawing, or just update the hover cursor.
+function onCanvasMouseMove(ev){
+	var pos = getCanvasPos(ev)
+	if(isDraggingLine){
+		memeService.setLinePos(pos.x - dragOffsetX, pos.y - dragOffsetY)
+		drawMeme()
+		return
+	}
+	if(isDrawing){
+		paintSegment(lastPoint, pos)
+		lastPoint = pos
+		drawMeme()
+		return
+	}
+	updateHoverCursor(pos)
+}
+
+// Show a "move" cursor over a text line, otherwise the drawing crosshair.
+function updateHoverCursor(pos){
+	canvasEl.style.cursor = (getLineIdxAtPos(pos) !== -1) ? 'move' : 'crosshair'
+}
+
+// Mouse released or left the canvas: end any stroke or line drag.
 function onCanvasStopDraw(){
 	isDrawing = false
+	isDraggingLine = false
 	lastPoint = null
 }
 
@@ -162,18 +189,23 @@ function drawLines(){
 	}
 }
 
-// Draw a single text line, centered; idx stacks it below the previous lines.
+// A line's anchor: its own dragged x/y if set, otherwise the default stacked position.
+function getLinePos(line, idx){
+	var x = (line.x === null || line.x === undefined) ? canvasEl.width / 2 : line.x
+	var y = (line.y === null || line.y === undefined) ? (60 + idx * (line.size + 10)) : line.y
+	return { x: x, y: y }
+}
+
+// Draw a single text line, centered on its anchor point.
 function drawLine(line, idx){
-	var cw = canvasEl.width
+	var pos = getLinePos(line, idx)
 	ctx.fillStyle = line.color || '#ffffff'
 	ctx.strokeStyle = '#000'
 	ctx.lineWidth = Math.max(2, Math.floor(line.size/12))
 	ctx.textAlign = 'center'
 	ctx.font = line.size + 'px Impact, Arial'
-	var x = cw/2
-	var y = 60 + idx * (line.size + 10)
-	ctx.fillText(line.txt, x, y)
-	ctx.strokeText(line.txt, x, y)
+	ctx.fillText(line.txt, pos.x, pos.y)
+	ctx.strokeText(line.txt, pos.x, pos.y)
 }
 
 // Draw a dashed orange box around a line to show it is the selected one.
@@ -191,12 +223,13 @@ function drawLineHighlight(line, idx){
 function getLineBox(line, idx){
 	ctx.font = line.size + 'px Impact, Arial'
 	ctx.textAlign = 'center'
+	var pos = getLinePos(line, idx)
 	var textW = ctx.measureText(line.txt || '').width
 	var pad = 8
 	var boxW = Math.max(textW, 30) + pad * 2
 	var boxH = line.size + pad * 2
-	var boxX = canvasEl.width / 2 - boxW / 2
-	var boxY = (60 + idx * (line.size + 10)) - line.size + pad / 2
+	var boxX = pos.x - boxW / 2
+	var boxY = pos.y - line.size + pad / 2
 	return { x: boxX, y: boxY, w: boxW, h: boxH }
 }
 

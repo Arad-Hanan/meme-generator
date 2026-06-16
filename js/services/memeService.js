@@ -94,6 +94,15 @@ function setLineColor(color){
     if(line) line.color = color
 }
 
+// Set the selected line's position on the canvas (used while dragging it).
+function setLinePos(x, y){
+    var line = getSelectedLine()
+    if(line){
+        line.x = x
+        line.y = y
+    }
+}
+
 // Read the current freehand brush color.
 function getDrawColor(){
     return gDrawColor
@@ -110,6 +119,7 @@ var memeService = {
     setImgById: setImgById,
     setLineTxt: setLineTxt,
     setLineColor: setLineColor,
+    setLinePos: setLinePos,
     getSelectedLine: getSelectedLine,
     setSelectedLine: setSelectedLine,
     addLine: addLine,
